@@ -1,7 +1,6 @@
 # This is code that calculates the "Josephus-Problem"
-# TODO: code more generalized-solution to the Josephus Problem
+# might be interesting to code up a way to calculate who the final two are. That way, you can save one other person.
 import PySimpleGUI as sg
-
 
 class Josephus:
     def __init__(self):
@@ -50,7 +49,7 @@ class Josephus:
             M = M + 1
         l = Number_of_Players - 2**(M - 1) # this should work. Standard Equation, though, is l = n - 2^m.
         return l
-    def Josephus_Calculation_General_Solution(self, values):
+    def Josephus_Calculation_General_Solution(self, values): # J(i,k)=(J(i−1,k)+k) modi
         n = int(values["NUM_OF_PLAYERS_GENERAL"])
         k = int(values["STEP_SIZE"])
         J = 0 # zero-based answer for 1-player
@@ -60,10 +59,14 @@ class Josephus:
     def input_Validation(self, *args):
         for test_Input in args:
             if test_Input == '' or test_Input == '0':
-                sg.popup("Invalid Input")
+                sg.popup("Invalid Input", title = "Invalid input: error - Emp")
+                return True
+            try: #try-excepts are useful
+                int(test_Input)
+            except:
+                sg.popup("Input must be an integer.", title = "Invalid input: error - Int")
                 return True
         return False
-
 
 if __name__ == "__main__":
     Executable = Josephus()
