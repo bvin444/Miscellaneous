@@ -33,22 +33,25 @@ class PRBS:
         return sg.Window("PRBS Analysis", layout, resizable = True)
 
     def PRBS_Calculator(self):
-        self.create_Array()
+
+        binary_Array = self.create_Array()
+        print(binary_Array)
+
     def create_Array(self):
 
         hold = self.numerical_Dictionary["SEED"]
         Array = []
         while hold != 0:
             Array.append(int(hold % 10))
-            print(hold)
             hold = hold // 10 
-            print(hold)
-        print(Array)
+
+
+        return Array
     
     def input_Validation(self, *args, values):
 
         for test_Input in args:
-            if test_Input == '':
+            if values[test_Input] == '':
                 sg.popup("Input cannot be blank")
                 return True
             try:
@@ -56,7 +59,13 @@ class PRBS:
             except:
                 sg.popup("Input must be a numeric")
                 return True
+            for i in values[test_Input]:
+                if i != '1' and i != '0':
+                    sg.popup("Input must be a binary value (eg. 0001000)")
+                    return True
+                
         self.numerical_Dictionary = {key: float(values[key]) for key in args}
+        return False
 
 if __name__ == "__main__":
 
