@@ -1,7 +1,6 @@
 # This is code to evaluate PRBS
 import PySimpleGUI as sg
 
-
 class PRBS:
     
     def __init__(self):
@@ -35,6 +34,17 @@ class PRBS:
     def PRBS_Calculator(self):
 
         binary_Array = self.create_Array()
+        hold = []
+        for i in range(127):
+            if (binary_Array[0] + binary_Array[1]) % 2 == 1:
+                binary_Array.insert(7, 1)
+                hold.append(binary_Array[0])
+                binary_Array.pop(0)
+            else:
+                binary_Array.insert(7, 0)
+                hold.append(binary_Array[0])
+                binary_Array.pop(0)
+        print(hold)
         print(binary_Array)
 
     def create_Array(self):
@@ -42,10 +52,8 @@ class PRBS:
         hold = self.numerical_Dictionary["SEED"]
         Array = []
         while hold != 0:
-            Array.append(int(hold % 10))
+            Array.insert(0, int(hold % 10))
             hold = hold // 10 
-
-
         return Array
     
     def input_Validation(self, *args, values):
@@ -70,4 +78,3 @@ class PRBS:
 if __name__ == "__main__":
 
     Executable = PRBS()
-
