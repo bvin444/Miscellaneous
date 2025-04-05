@@ -1,8 +1,15 @@
 # This is code to evaluate PRBS
 import PySimpleGUI as sg
+from typing import ClassVar
+from typing import Dict
+
+# TODO: Add in functionality for PRBS13
 
 class PRBS:
     
+    # class variable
+    parameters_Dictionary : ClassVar[int] = {"7" : 1, "9" : 4, "11" : 2, "15" : 1, "20" : 17, "23" : 5}
+
     def __init__(self):
         
         self.main()
@@ -17,47 +24,50 @@ class PRBS:
             if event in (sg.WIN_CLOSED, "EXIT"): break
             elif event == "SUBMIT":
                 if self.input_Validation("SEED", values = values): continue
-                self.PRBS_Calculator()
+                self.PRBS_Calculator(values)
 
     def create_main_window(self):
 
         PRBS_Frame = sg.Frame("PRBS",
             [
+                [sg.Text("This code allows you to specify seeds for PRBS7, PRBS9, PRBS11, PRBS15, PRBS20, and PRBS23")],
                 [sg.Text("Please enter your seed:"), sg.Input("", key = "SEED")],
-                [sg.Button("Submit", key = "SUBMIT"), sg.Button("Exit", key = "EXIT")]
+                [sg.Text("The length of sequence is: "), sg.Input("", key = "LE")],
+                [sg.Button("Submit", key = "SUBMIT"), sg.Text("Note: Your PRBS can be found in the terminal after pressing submit.")],
+                [sg.Button("Exit", key = "EXIT")]
             ])
         
         layout = [[PRBS_Frame]]
 
         return sg.Window("PRBS Analysis", layout, resizable = True)
 
-    def PRBS_Calculator(self):
+    def PRBS_Calculator(self, values):
 
-        binary_Array = self.create_Array()
+        binary_Array = self.value
+        length_Array = len(binary_Array)
+        x = self.get_Parameters(values)
         hold = []
-        for i in range(127):
-            if (binary_Array[0] + binary_Array[1]) % 2 == 1:
-                binary_Array.insert(7, 1)
+        for i in range(2**(length_Array) - 1):
+            if (binary_Array[0] + binary_Array[x]) % 2 == 1:
+                binary_Array.insert(length_Array, 1)
                 hold.append(binary_Array[0])
                 binary_Array.pop(0)
             else:
-                binary_Array.insert(7, 0)
+                binary_Array.insert(length_Array, 0)
                 hold.append(binary_Array[0])
                 binary_Array.pop(0)
         print(hold)
-        print(binary_Array)
+        self.window["LE"].update(f"{len(hold)}")
 
-    def create_Array(self):
+    def get_Parameters(self, values):
 
-        hold = self.numerical_Dictionary["SEED"]
-        Array = []
-        while hold != 0:
-            Array.insert(0, int(hold % 10))
-            hold = hold // 10 
-        return Array
+        dict_Index = str(len(values["SEED"]))
+        y = PRBS.parameters_Dictionary[dict_Index]
+        return y
     
     def input_Validation(self, *args, values):
 
+        self.value = []
         for test_Input in args:
             if values[test_Input] == '':
                 sg.popup("Input cannot be blank")
@@ -67,10 +77,15 @@ class PRBS:
             except:
                 sg.popup("Input must be a numeric")
                 return True
+            if str(len(values[test_Input])) not in PRBS.parameters_Dictionary:
+                sg.popup("Bit number mismatch! 7, 9, 11, 15, 20, 23")
+                return True
             for i in values[test_Input]:
                 if i != '1' and i != '0':
                     sg.popup("Input must be a binary value (eg. 0001000)")
                     return True
+                else:
+                    self.value.append(int(i))
                 
         self.numerical_Dictionary = {key: float(values[key]) for key in args}
         return False
