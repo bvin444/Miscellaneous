@@ -3,12 +3,10 @@ import PySimpleGUI as sg
 from typing import ClassVar
 from typing import Dict
 
-# TODO: Add in functionality for PRBS13
-
 class PRBS:
     
     # class variable
-    parameters_Dictionary : ClassVar[int] = {"7" : 1, "9" : 4, "11" : 2, "15" : 1, "20" : 17, "23" : 5}
+    parameters_Dictionary : ClassVar[int] = {"7" : 1, "9" : 4, "11" : 2, "13": 1, "15" : 1, "20" : 17, "23" : 5}
 
     def __init__(self):
         
@@ -24,7 +22,10 @@ class PRBS:
             if event in (sg.WIN_CLOSED, "EXIT"): break
             elif event == "SUBMIT":
                 if self.input_Validation("SEED", values = values): continue
-                self.PRBS_Calculator(values)
+                if len(self.value) == 13:
+                    self.PRBS13_Calculator(values)
+                else:
+                    self.PRBS_Calculator(values)
 
     def create_main_window(self):
 
@@ -57,7 +58,26 @@ class PRBS:
                 hold.append(binary_Array[0])
                 binary_Array.pop(0)
         print(hold)
-        self.window["LE"].update(f"{len(hold)}")
+        print(binary_Array)
+        self.window["LE"].update(f"{len(hold) + 1}")
+
+    def PRBS13_Calculator(self, values):
+
+        binary_Array = self.value
+        length_Array = len(binary_Array)
+        hold = []
+        for i in range(2**(length_Array) - 1):
+            if (binary_Array[0] + binary_Array[1] + binary_Array[11] + binary_Array[12]) % 2 == 1:
+                binary_Array.insert(length_Array, 1)
+                hold.append(binary_Array[0])
+                binary_Array.pop(0)
+            else:
+                binary_Array.insert(length_Array, 0)
+                hold.append(binary_Array[0])
+                binary_Array.pop(0)
+        print(hold)
+        print(binary_Array)
+        self.window["LE"].update(f"{len(hold) + 1}")
 
     def get_Parameters(self, values):
 
