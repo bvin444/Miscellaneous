@@ -77,6 +77,9 @@ class PRBS:
             if values[test_Input] == '':
                 sg.popup("Input cannot be blank")
                 return True
+            if values[test_Input] == '1':
+                sg.popup("PRBS1 doesn't represent anything meaninful. Please input a different value.")
+                return True
             if len(values[test_Input]) > 23:
                 sg.popup("Please enter no more than 23-bits!")
                 return True
