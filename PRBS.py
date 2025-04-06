@@ -6,7 +6,9 @@ from typing import Dict
 class PRBS:
     
     # class variable
-    parameters_Dictionary : ClassVar[int] = {"7" : 1, "9" : 4, "11" : 2, "13": 1, "15" : 1, "20" : 17, "23" : 5}
+    parameters_Dictionary : ClassVar[Dict] = {"7" : 1, "9" : 4, "11" : 2, "13": 1, "15" : 1, "20" : 17, "23" : 5}
+    primitive_taps_2 : ClassVar[Dict[int, list[int]]] = {1: [1], 2: [0, 1], 3: [0, 2], 4: [0, 3], 5: [0, 3], 6: [0, 5], 7: [0, 1], 9: [0, 4], 10: [0, 3], 11: [0, 2], 15: [0, 1], 17: [0, 14], 18: [0, 11],
+                                    20: [0, 3], 21: [0, 19], 22: [0, 21], 23: [0, 5], 8: [0, 2, 3, 4], 12: [0, 6, 8, 11], 13: [0, 1, 11, 12], 14: [0, 1, 2, 12], 16: [0, 2, 3, 5], 19: [0, 14, 17, 18]}
 
     def __init__(self):
         
@@ -22,10 +24,7 @@ class PRBS:
             if event in (sg.WIN_CLOSED, "EXIT"): break
             elif event == "SUBMIT":
                 if self.input_Validation("SEED", values = values): continue
-                if len(self.value) == 13:
-                    self.PRBS13_Calculator(values)
-                else:
-                    self.PRBS_Calculator(values)
+                self.PRBS_Calculator(values)
 
     def create_main_window(self):
 
@@ -45,11 +44,11 @@ class PRBS:
     def PRBS_Calculator(self, values):
 
         binary_Array = self.value
-        length_Array = len(binary_Array)
-        x = self.get_Parameters(values)
+        length_Array = len(binary_Array) # length of input array
         hold = []
         for i in range(2**(length_Array) - 1):
-            if (binary_Array[0] + binary_Array[x]) % 2 == 1:
+            sum = self.get_Sum(length_Array, binary_Array)
+            if sum % 2 == 1:
                 binary_Array.insert(length_Array, 1)
                 hold.append(binary_Array[0])
                 binary_Array.pop(0)
@@ -59,31 +58,17 @@ class PRBS:
                 binary_Array.pop(0)
         print(hold)
         print(binary_Array)
-        self.window["LE"].update(f"{len(hold) + 1}")
+        self.window["LE"].update(f"{len(hold)}")
+    
+    def get_Sum(self, Length, binary_Array):
 
-    def PRBS13_Calculator(self, values):
-
-        binary_Array = self.value
-        length_Array = len(binary_Array)
-        hold = []
-        for i in range(2**(length_Array) - 1):
-            if (binary_Array[0] + binary_Array[1] + binary_Array[11] + binary_Array[12]) % 2 == 1:
-                binary_Array.insert(length_Array, 1)
-                hold.append(binary_Array[0])
-                binary_Array.pop(0)
-            else:
-                binary_Array.insert(length_Array, 0)
-                hold.append(binary_Array[0])
-                binary_Array.pop(0)
-        print(hold)
-        print(binary_Array)
-        self.window["LE"].update(f"{len(hold) + 1}")
-
-    def get_Parameters(self, values):
-
-        dict_Index = str(len(values["SEED"]))
-        y = PRBS.parameters_Dictionary[dict_Index]
-        return y
+        iteration_N = len(PRBS.primitive_taps_2[Length]) # number of taps
+        sum = 0
+        index = 0
+        for i in range(1, iteration_N + 1):
+            sum = sum + binary_Array[PRBS.primitive_taps_2[Length][index]]
+            index = index + 1
+        return sum
     
     def input_Validation(self, *args, values):
 
@@ -92,13 +77,8 @@ class PRBS:
             if values[test_Input] == '':
                 sg.popup("Input cannot be blank")
                 return True
-            try:
-                float(values[test_Input])
-            except:
-                sg.popup("Input must be a numeric")
-                return True
-            if str(len(values[test_Input])) not in PRBS.parameters_Dictionary:
-                sg.popup("Bit number mismatch! 7, 9, 11, 15, 20, 23")
+            if len(values[test_Input]) > 23:
+                sg.popup("Please enter no more than 23-bits!")
                 return True
             for i in values[test_Input]:
                 if i != '1' and i != '0':
