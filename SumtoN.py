@@ -31,13 +31,13 @@ class Sum_of_Integers:
         return running_Sum
     def input_Validation(self, values):
         if values["N"] == '':
-            sg.popup("Input cannot be blank", size = (50, 50), title = "Blank Input")
+            sg.popup("Input cannot be blank", title = "Blank Input")
             return True
         try:
             int(values["N"])
             return False
         except:
-            sg.popup("Input must be a integer", title = "Integer Input Error", size = (50, 50))
+            sg.popup("Input must be a integer", title = "Integer Input Error")
             return True
         
 if __name__ == "__main__":
