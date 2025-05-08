@@ -33,10 +33,14 @@ class ethernet:
     '000': '0100', '001': '0110', '010': '1010', '011': '0011',
     '100': '0010', '101': '0101', '110': '1001', '111': '0001',
     }
+
     def __init__(self):
+
         self.Disparity = -1
         self.main()
+
     def main(self):
+
         self.window = self.create_main_window()
         while True:
             event, values = self.window.read()
@@ -45,7 +49,9 @@ class ethernet:
                 if self.input_Validation(values): continue
                 self.get_Running_Disparity(values)
         self.window.close()
+
     def create_main_window(self):
+
         sum_Frame = sg.Frame("Ethernet", 
             [
                 [sg.Text("Please enter the binary-value you would like to send:"), sg.Input("", key = 'BINARY_INPUT')],
@@ -56,28 +62,36 @@ class ethernet:
         layout = [[sum_Frame]]
         window = sg.Window("Ethernet", layout, resizable = True)
         return window
+    
     def get_Running_Disparity(self, values):
+
         if self.Disparity < 0:
             Ten_B = self.Negative(values)
             self.update_Disparity(Ten_B)
         else:
             Ten_B = self.Positive(values)
             self.update_Disparity(Ten_B)
-        self.window["ENCODED_OUTOUT"].update(f"{Ten_B}")
+        self.window["ENCODED_OUTPUT"].update(f"{Ten_B}")
         self.window["DISPARITY"].update(f"{self.Disparity}")
+
     def Positive(self, values):
+
         five_b, three_b = self.partition_Pattern(values)
         six_b = ethernet.Positive_Lookup_5b_6b[five_b]
         four_b = ethernet.Positive_Lookup_3b_4b[three_b]
         ten_B = six_b+ four_b
         return ten_B
+    
     def Negative(self, values):
+
         five_b, three_b = self.partition_Pattern(values)
         six_b = ethernet.Negative_Lookup_5b_6b[five_b]
         four_b = ethernet.Negative_Lookup_3b_4b[three_b]
         ten_B = six_b+ four_b
         return ten_B
+    
     def partition_Pattern(self, values):
+
         five_b = ''
         three_b = ''
         for i in values["BINARY_INPUT"][:5]:
@@ -85,13 +99,17 @@ class ethernet:
         for J in values["BINARY_INPUT"][5:]:
             three_b = three_b + J
         return five_b, three_b
+    
     def update_Disparity(self, Ten_B):
+        
         for i in Ten_B:
             if i == '1':
                 self.Disparity = 1 + self.Disparity
             elif i == '0':
                 self.Disparity = -1 + self.Disparity
+
     def input_Validation(self, values):
+        
         if values["BINARY_INPUT"] == '':
             sg.popup("Input cannot be blank", size = (50, 50), title = "Blank Input")
             return True
@@ -105,5 +123,3 @@ class ethernet:
         
 if __name__ == "__main__":
     Executable = ethernet()
-
-
