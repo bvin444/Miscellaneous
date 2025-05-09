@@ -12,7 +12,6 @@ class ethernet:
 
         self.Disparity_tX = -1
         self.Disparity_rX = -1
-
         self.main()
         
     def main(self):
@@ -103,12 +102,13 @@ class ethernet:
     
     def get_Running_Disparity_Rx(self, values):
 
-        if self.Disparity_rX < 0:
-            self.update_Disparity_Rx(values["RECEIVED_W"])
-            Eight_Bit = self.Receiver_Negative(values)
+        six_b, four_b = self.partition_Pattern_Rx(values)
+        if six_b in self.loaded_data['Negative_Lookup_6b_5b'] and four_b in self.loaded_data['Negative_Lookup_4b_3b']: Eight_Bit = self.Receiver_Negative(values)
+        elif six_b in self.loaded_data['Positive_Lookup_6b_5b'] and four_b in self.loaded_data['Positive_Lookup_4b_3b']: Eight_Bit = self.Receiver_Positive(values)
         else:
-            self.update_Disparity_Rx(values["RECEIVED_W"])
-            Eight_Bit = self.Receiver_Positive(values)
+            sg.popup("Value not found!")
+            return 
+        self.update_Disparity_Rx(values["RECEIVED_W"])
         self.window["DECODED_OUTPUTrx"].update(f"{Eight_Bit}")
         self.window["DISPARITYRX"].update(f"{self.Disparity_rX}")
 
