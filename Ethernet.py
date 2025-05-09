@@ -28,6 +28,7 @@ class ethernet:
             elif event == "SUBMIT":
                 if self.input_Validation(values): continue
                 self.get_Running_Disparity_Tx(values)
+            elif event == "DECODE":
                 self.get_Running_Disparity_Rx(values)
         self.window.close()
 
@@ -36,14 +37,15 @@ class ethernet:
        Transceiver_Frame = sg.Frame("Ethernet", 
             [
                 [sg.Text("Please enter the binary-value you would like to send:"), sg.Input("", key = 'BINARY_INPUT')],
-                [sg.Text("8b/10-Representation"), sg.Input('', key = "ENCODED_OUTPUT")],
-                [sg.Text("Running-Disparity"), sg.Input('-1 (Default)', key = "DISPARITY")],
+                [sg.Text("8b/10-Representation"), sg.Input('', key = "ENCODED_OUTPUTtx")],
+                [sg.Text("Running-Disparity"), sg.Input('-1 (Default)', key = "DISPARITYTX")],
             ])
        Receiver_Frame = sg.Frame("Ethernet", 
             [
                 [sg.Text("Recieved bits"), sg.Input("", key = 'RECEIVED_W')],
-                [sg.Text("Decoded bits"), sg.Input('', key = "ENCODED_OUTPUT")],
-                [sg.Text("Running-Disparity"), sg.Input('-1 (Default)', key = "DISPARITY")],
+                [sg.Text("Decoded bits"), sg.Input('', key = "DECODED_OUTPUTrx")],
+                [sg.Text("Running-Disparity"), sg.Input('-1 (Default)', key = "DISPARITYRX")],
+                [sg.Button("Decoded Bye", key = "DECODE")]
             ])
        submission_Frame = sg.Frame("Submi",
             [
@@ -61,9 +63,9 @@ class ethernet:
         else:
             Ten_B = self.Transceiver_Positive(values)
             self.update_Disparity_Tx(Ten_B)
-        self.window["ENCODED_OUTPUT"].update(f"{Ten_B}")
+        self.window["ENCODED_OUTPUTtx"].update(f"{Ten_B}")
         self.window["RECEIVED_W"].update(f"{Ten_B}")
-        self.window["DISPARITY"].update(f"{self.Disparity_tX}")
+        self.window["DISPARITYTX"].update(f"{self.Disparity_tX}")
 
     def Transceiver_Positive(self, values):
 
@@ -102,28 +104,27 @@ class ethernet:
     def get_Running_Disparity_Rx(self, values):
 
         if self.Disparity_rX < 0:
-            Ten_B = self.Receiver_Negative(values)
-            self.update_Disparity_Rx(Ten_B)
+            self.update_Disparity_Rx(values["RECEIVED_W"])
+            Eight_Bit = self.Receiver_Negative(values)
         else:
-            Ten_B = self.Receiver_Positive(values)
-            self.update_Disparity_Rx(Ten_B)
-        self.window["ENCODED_OUTPUT"].update(f"{Ten_B}")
-        self.window["RECEIVED_W"].update(f"{Ten_B}")
-        self.window["DISPARITY"].update(f"{self.Disparity_rX}")
+            self.update_Disparity_Rx(values["RECEIVED_W"])
+            Eight_Bit = self.Receiver_Positive(values)
+        self.window["DECODED_OUTPUTrx"].update(f"{Eight_Bit}")
+        self.window["DISPARITYRX"].update(f"{self.Disparity_rX}")
 
     def Receiver_Positive(self, values):
 
         six_b, four_b = self.partition_Pattern_Rx(values)
-        five_b = self.loaded_data['Positive_Lookup_5b_6b'][six_b]
-        three_b = self.loaded_data['Positive_Lookup_3b_4b'][four_b]
+        five_b = self.loaded_data['Positive_Lookup_6b_5b'][six_b]
+        three_b = self.loaded_data['Positive_Lookup_4b_3b'][four_b]
         eight_B = five_b+ three_b
         return eight_B
     
     def Receiver_Negative(self, values):
 
         six_b, four_b = self.partition_Pattern_Rx(values)
-        five_b = self.loaded_data['Negative_Lookup_5b_6b'][six_b]
-        three_b = self.loaded_data['Negative_Lookup_3b_4b'][four_b]
+        five_b = self.loaded_data['Negative_Lookup_6b_5b'][six_b]
+        three_b = self.loaded_data['Negative_Lookup_4b_3b'][four_b]
         eight_B = five_b+ three_b
         return eight_B
     
