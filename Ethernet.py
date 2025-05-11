@@ -5,6 +5,7 @@ import PySimpleGUI as sg
 from typing import ClassVar
 from typing import Dict
 import json
+import time
 
 class ethernet:
 
@@ -56,12 +57,12 @@ class ethernet:
             ])
        Receiver_Frame = sg.Frame("Ethernet", 
             [
-                [sg.Text("Recieved bits"), sg.Input("", key = 'RECEIVED_W'), sg.Text("Received Code"), sg.Input("", key = "RECEIVED_CODE")],
+                [sg.Text("Received bits"), sg.Input("", key = 'RECEIVED_W'), sg.Text("Received Code"), sg.Input("", key = "RECEIVED_CODE")],
                 [sg.Text("Decoded bits"), sg.Input('', key = "DECODED_OUTPUTrx")],
                 [sg.Text("Running-Disparity"), sg.Input('-1 (Default)', key = "DISPARITYRX")],
                 [sg.Button("Decoded Bye", key = "DECODE")]
             ])
-       submission_Frame = sg.Frame("Submi",
+       submission_Frame = sg.Frame("Submit",
             [
                 [sg.Button("Submit", key = "SUBMIT"), sg.Button("Reset", key = "RESET"), sg.Button("Exit", key = "EXIT")]
             ])
@@ -82,14 +83,19 @@ class ethernet:
         for key in self.ethernet_Frame:
             length = len(self.ethernet_Frame[key])
             for i in range(length):
-                self.hold = ''
+                hold = ''
                 hold_second = ''
                 for j in self.ethernet_Frame[key][i]:
-                    self.hold = self.hold + ethernet.hex_Decoder[j]
+                    hold = hold + ethernet.hex_Decoder[j]
                     hold_second = hold_second + j
-                print(f"{hold_second}-Hex translates to {self.hold}-bin.")
+                values = self.encode_direct(hold, values)
                 self.get_Running_Disparity_Tx(values)
+    
+    def encode_direct(self, binary_string, values):
 
+        values = {"BINARY_INPUT": binary_string, "CODE_TYPE": values["CODE_TYPE"]}
+        return values
+    
     def get_Running_Disparity_Tx(self, values):
 
         Flag = self.Code(values)
@@ -97,18 +103,21 @@ class ethernet:
             if self.Disparity_tX < 0 and Flag == 0:
                 Ten_B = self.Transceiver_Negative(values)
                 self.update_Disparity_Tx(Ten_B)
+                print(Ten_B)
             elif self.Disparity_tX and Flag == 0:
                 Ten_B = self.Transceiver_Positive(values)
                 self.update_Disparity_Tx(Ten_B)
+                print(Ten_B)
             elif Flag == 1:
                 Ten_B = self.K_tx(values)
                 self.update_Disparity_Tx(Ten_B)
+                print(Ten_B)
         except ValueError as e:
             sg.popup(str(e))
             return
         self.window["ENCODED_OUTPUTtx"].update(f"{Ten_B}")
         self.window["RECEIVED_W"].update(f"{Ten_B}")
-        self.window["RECEIVED_CODE"].update(f"{values["CODE_TYPE"]}")
+        self.window["RECEIVED_CODE"].update(f"{values['CODE_TYPE']}")
         self.window["DISPARITYTX"].update(f"{self.Disparity_tX}")
         self.tx = self.tx + 1
 
@@ -151,7 +160,6 @@ class ethernet:
         five_b, three_b = self.partition_Pattern_Tx(values)
         if five_b not in self.loaded_data['K_Lookup_5b_6b'] or three_b not in self.loaded_data['K_Lookup_3b_4b']: 
             raise ValueError("K-code not found!")
-        print("Hi")
         six_b = self.loaded_data['K_Lookup_5b_6b'][five_b]
         four_b = self.loaded_data['K_Lookup_3b_4b'][three_b]
         ten_B = six_b + four_b
