@@ -9,6 +9,8 @@ import json
 class ethernet:
 
     code_T : ClassVar[Dict] = {"K": 1, "D": 0}
+    hex_Decoder : ClassVar[Dict] = {'0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101', '6': '0110', '7': '0111', '8': '1000',
+                                    '9': '1001', 'A': '1010', 'B': '1011', 'C': '1100', 'D': '1101', 'E': '1110', 'F': '1111'}
     def __init__(self):
 
         self.Disparity_tX = -1
@@ -35,10 +37,10 @@ class ethernet:
                     sg.popup("No new word to decode")
                     continue
                 self.get_Running_Disparity_Rx(values)
+            elif event == "SEND":
+                self.read_Ethernet_Frame(values)
             elif event == "RESET":
                 self.Reset()
-            elif event == "TEST":
-                self.Test()
         self.window.close()
 
     def create_main_window(self):
@@ -49,6 +51,7 @@ class ethernet:
                 sg.Text("Please select code Type (Control (K) / Data (D))"), sg.Combo(list(ethernet.code_T),default_value = "D", key = "CODE_TYPE")],
                 [sg.Text("8b/10-Representation"), sg.Input('', key = "ENCODED_OUTPUTtx")],
                 [sg.Text("Running-Disparity"), sg.Input('-1 (Default)', key = "DISPARITYTX")],
+                [sg.Text("Send Ethernet _Frame"), sg.Button("Send", key = "SEND")]
 
             ])
        Receiver_Frame = sg.Frame("Ethernet", 
@@ -66,6 +69,27 @@ class ethernet:
        window = sg.Window("Ethernet", layout, resizable = True)
        return window
     
+    def read_Ethernet_Frame(self, values):
+
+        with open("ethernet_Frame.json", "r") as h:
+
+            self.ethernet_Frame = json.load(h)
+
+        self.hex_Deco(values)
+        
+    def hex_Deco(self, values):
+
+        for key in self.ethernet_Frame:
+            length = len(self.ethernet_Frame[key])
+            for i in range(length):
+                self.hold = ''
+                hold_second = ''
+                for j in self.ethernet_Frame[key][i]:
+                    self.hold = self.hold + ethernet.hex_Decoder[j]
+                    hold_second = hold_second + j
+                print(f"{hold_second}-Hex translates to {self.hold}-bin.")
+                self.get_Running_Disparity_Tx(values)
+
     def get_Running_Disparity_Tx(self, values):
 
         Flag = self.Code(values)
@@ -85,7 +109,6 @@ class ethernet:
         self.window["ENCODED_OUTPUTtx"].update(f"{Ten_B}")
         self.window["RECEIVED_W"].update(f"{Ten_B}")
         self.window["RECEIVED_CODE"].update(f"{values["CODE_TYPE"]}")
-
         self.window["DISPARITYTX"].update(f"{self.Disparity_tX}")
         self.tx = self.tx + 1
 
