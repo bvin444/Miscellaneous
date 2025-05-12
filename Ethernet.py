@@ -14,6 +14,8 @@ class ethernet:
                                     '9': '1001', 'A': '1010', 'B': '1011', 'C': '1100', 'D': '1101', 'E': '1110', 'F': '1111'}
     def __init__(self):
 
+        self.ticker = 0
+        self.ticker_2 = 0
         self.Disparity_tX = -1
         self.Disparity_rX = -1
         self.tx = 0
@@ -89,9 +91,16 @@ class ethernet:
                     hold = hold + ethernet.hex_Decoder[j]
                     hold_second = hold_second + j
                 values = self.encode_direct(hold, values)
-                self.get_Running_Disparity_Tx(values)
+                ten_B = self.get_Running_Disparity_Tx(values)
+                values = self.decode_direct(ten_B, values)
+                self.get_Running_Disparity_Rx(values)
     
     def encode_direct(self, binary_string, values):
+
+        values = {"BINARY_INPUT": binary_string, "CODE_TYPE": values["CODE_TYPE"]}
+        return values
+    
+    def decode_direct(self, binary_string, values):
 
         values = {"BINARY_INPUT": binary_string, "CODE_TYPE": values["CODE_TYPE"]}
         return values
@@ -103,15 +112,16 @@ class ethernet:
             if self.Disparity_tX < 0 and Flag == 0:
                 Ten_B = self.Transceiver_Negative(values)
                 self.update_Disparity_Tx(Ten_B)
-                print(Ten_B)
+                self.transmit_Print(Ten_B, values["BINARY_INPUT"])
             elif self.Disparity_tX and Flag == 0:
                 Ten_B = self.Transceiver_Positive(values)
                 self.update_Disparity_Tx(Ten_B)
-                print(Ten_B)
+                self.transmit_Print(Ten_B, values["BINARY_INPUT"])
             elif Flag == 1:
                 Ten_B = self.K_tx(values)
                 self.update_Disparity_Tx(Ten_B)
-                print(Ten_B)
+                self.transmit_Print(Ten_B, values["BINARY_INPUT"])
+
         except ValueError as e:
             sg.popup(str(e))
             return
@@ -120,6 +130,13 @@ class ethernet:
         self.window["RECEIVED_CODE"].update(f"{values['CODE_TYPE']}")
         self.window["DISPARITYTX"].update(f"{self.Disparity_tX}")
         self.tx = self.tx + 1
+        return Ten_B
+
+    def transmit_Print(self, value, E):
+
+        self.ticker = self.ticker + 1
+        print(f"{self.ticker} Transmitted: {E} as {value}")
+        self.for_Comparison(E, 0)
 
     def Transceiver_Positive(self, values):
 
@@ -184,22 +201,42 @@ class ethernet:
             (six_b in P65 and four_b in P43):
             if self.Disparity_rX < 0:
                 Eight_Bit = self.Receiver_Negative(values)
+                self.print_Receive(Eight_Bit)
             elif self.Disparity_rX > 0:
                 Eight_Bit = self.Receiver_Positive(values)
-
+                self.print_Receive(Eight_Bit)
         elif six_b in N65 and four_b in N43:
             Eight_Bit = self.Receiver_Negative(values)
+            self.print_Receive(Eight_Bit)       
         elif six_b in P65 and four_b in P43:
             Eight_Bit = self.Receiver_Positive(values)
+            self.print_Receive(Eight_Bit)
 
         else:
             sg.popup("Value not found!")
             return
 
-        self.update_Disparity_Rx(values["RECEIVED_W"])
+        self.update_Disparity_Rx(values["BINARY_INPUT"])
         self.window["DECODED_OUTPUTrx"].update(f"{Eight_Bit}")
         self.window["DISPARITYRX"].update(f"{self.Disparity_rX}")
         self.rx = self.rx + 1
+    
+    def print_Receive(self, value):
+
+        self.ticker_2 = self.ticker_2 + 1
+        print(f"{self.ticker_2} Received: {value}")
+        self.for_Comparison(value, 1)
+        
+    def for_Comparison(self, E, Flag):
+
+        if Flag == 0:
+            self.Eight_xT = E
+        elif Flag == 1:
+            self.Eight_xR = E
+            if self.Eight_xT == self.Eight_xR:
+                print("Successful")
+            else:
+                print("Failure")
 
     def Receiver_Positive(self, values):
 
@@ -221,9 +258,9 @@ class ethernet:
 
         six_b = ''
         four_b = ''
-        for i in values["RECEIVED_W"][:6]:
+        for i in values["BINARY_INPUT"][:6]:
             six_b = six_b + i
-        for J in values["RECEIVED_W"][6:]:
+        for J in values["BINARY_INPUT"][6:]:
             four_b = four_b + J
         return six_b, four_b
     
